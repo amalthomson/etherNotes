@@ -1,3 +1,4 @@
+import 'package:etherNotes/splashScreen.dart';
 import 'package:flutter/material.dart';
 import 'package:etherNotes/homeScreen.dart';
 import 'package:etherNotes/web3client.dart';
@@ -7,23 +8,31 @@ void main() {
   runApp(
     ChangeNotifierProvider(
       create: (context) => NotesServices(),
-      child: const MyApp(),
+      child: MaterialApp(
+        title: 'etherNotes',
+        theme: ThemeData(
+          useMaterial3: true,
+        ),
+        debugShowCheckedModeBanner: false,
+        home: SplashScreen(), // Show splash screen initially
+      ),
     ),
   );
-}
 
-class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'etherNotes',
-      theme: ThemeData(
-        useMaterial3: true,
+  // Delay for 2 seconds and then navigate to HomeScreen
+  Future.delayed(Duration(seconds: 3), () {
+    runApp(
+      ChangeNotifierProvider(
+        create: (context) => NotesServices(),
+        child: MaterialApp(
+          title: 'etherNotes',
+          theme: ThemeData(
+            useMaterial3: true,
+          ),
+          debugShowCheckedModeBanner: false,
+          home: const HomeScreen(), // Navigate to HomeScreen after delay
+        ),
       ),
-      home: const HomeScreen(),
-      debugShowCheckedModeBanner: false,
     );
-  }
+  });
 }

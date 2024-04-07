@@ -30,4 +30,5 @@ flutter:
 
   assets:
     - build/contracts/
+    - assets/
 

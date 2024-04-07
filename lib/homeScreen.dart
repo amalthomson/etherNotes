@@ -1,5 +1,5 @@
-import 'package:etherNotes/note.dart';
 import 'package:flutter/material.dart';
+import 'package:etherNotes/note.dart';
 import 'package:etherNotes/web3client.dart';
 import 'package:provider/provider.dart';
 
@@ -27,6 +27,7 @@ class _HomeScreenState extends State<HomeScreen> {
     var notesServices = context.watch<NotesServices>();
 
     return Scaffold(
+      backgroundColor: Colors.blueGrey[900],
       appBar: AppBar(
         title: Text(
           'etherNotes',
@@ -36,7 +37,7 @@ class _HomeScreenState extends State<HomeScreen> {
             fontSize: 36,
           ),
         ),
-        backgroundColor: Colors.blueGrey[900],
+        backgroundColor: Colors.black,
         elevation: 0,
         centerTitle: true,
       ),
@@ -70,35 +71,38 @@ class _HomeScreenState extends State<HomeScreen> {
                   _showNoteDetails(
                       context, notesServices.notes[index]);
                 },
-                child: Card(
-                  elevation: 4,
+                child: Container(
                   margin: EdgeInsets.symmetric(
                       vertical: 8, horizontal: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  color: Colors.white,
-                  child: ListTile(
-                    title: Text(
-                      notesServices.notes[index].title,
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
+                  child: Card(
+                    elevation: 4,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
                     ),
-                    subtitle: Text(
-                      notesServices.notes[index].description,
-                      style: TextStyle(fontSize: 16),
-                    ),
-                    trailing: IconButton(
-                      icon: const Icon(
-                        Icons.delete,
-                        color: Colors.red,
+                    color: Colors.deepPurple[50],
+                    child: ListTile(
+                      title: Text(
+                        notesServices.notes[index].title,
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.deepPurple[900],
+                        ),
                       ),
-                      onPressed: () {
-                        _showDeleteDialog(
-                            context, notesServices, index);
-                      },
+                      subtitle: Text(
+                        notesServices.notes[index].description,
+                        style: TextStyle(fontSize: 16),
+                      ),
+                      trailing: IconButton(
+                        icon: const Icon(
+                          Icons.delete,
+                          color: Colors.red,
+                        ),
+                        onPressed: () {
+                          notesServices.deleteNote(
+                              notesServices.notes[index].id);
+                        },
+                      ),
                     ),
                   ),
                 ),
@@ -111,9 +115,63 @@ class _HomeScreenState extends State<HomeScreen> {
         opacity: isFabVisible ? 1.0 : 0.0,
         duration: Duration(milliseconds: 500),
         child: FloatingActionButton(
+          backgroundColor: Colors.deepPurpleAccent,
           child: const Icon(Icons.add),
           onPressed: () {
-            _showAddDialog(context, notesServices);
+            showDialog(
+              context: context,
+              builder: (context) {
+                return AlertDialog(
+                  title: const Text(
+                    'New Note',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.purple,
+                    ),
+                  ),
+                  content: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      TextField(
+                        controller: titleController,
+                        style: TextStyle(color: Colors.deepPurple[900]),
+                        decoration: const InputDecoration(
+                          hintText: 'Enter title',
+                          hintStyle: TextStyle(color: Colors.grey),
+                        ),
+                      ),
+                      SizedBox(height: 16),
+                      TextField(
+                        controller: descriptionController,
+                        style: TextStyle(color: Colors.deepPurple[900]),
+                        decoration: const InputDecoration(
+                          hintText: 'Enter description',
+                          hintStyle: TextStyle(color: Colors.grey),
+                        ),
+                      ),
+                    ],
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () {
+                        notesServices.addNote(
+                          titleController.text,
+                          descriptionController.text,
+                        );
+                        Navigator.pop(context);
+                      },
+                      child: const Text(
+                        'Add',
+                        style: TextStyle(
+                          color: Colors.deepPurpleAccent,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            );
           },
         ),
       ),
@@ -124,217 +182,52 @@ class _HomeScreenState extends State<HomeScreen> {
     showDialog(
       context: context,
       builder: (context) {
-        return AlertDialog(
-          title: Text(
-            note.title,
-            style: TextStyle(fontWeight: FontWeight.bold),
+        return Dialog(
+          elevation: 4,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
           ),
-          content: Column(
+          child: Column(
             mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text(
-                note.description,
-                style: TextStyle(fontSize: 16),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: const Text(
-                'Close',
-                style: TextStyle(
-                  color: Colors.deepPurple,
-                  fontWeight: FontWeight.bold,
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Text(
+                  note.title,
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 20,
+                    color: Colors.deepPurple[900],
+                  ),
                 ),
               ),
-            ),
-            TextButton(
-              onPressed: () {
-                _showEditDialog(context, note);
-              },
-              child: const Text(
-                'Edit',
-                style: TextStyle(
-                  color: Colors.deepPurple,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void _showEditDialog(BuildContext context, Note note) {
-    titleController.text = note.title;
-    descriptionController.text = note.description;
-
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text(
-            'Edit Note',
-            style: TextStyle(fontWeight: FontWeight.bold),
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: titleController,
-                decoration: const InputDecoration(
-                  hintText: 'Enter title',
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Text(
+                  note.description,
+                  style: TextStyle(
+                    fontSize: 18,
+                    color: Colors.deepPurple[900],
+                  ),
                 ),
               ),
               SizedBox(height: 16),
-              TextField(
-                controller: descriptionController,
-                decoration: const InputDecoration(
-                  hintText: 'Enter description',
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: const Text(
+                  'Close',
+                  style: TextStyle(
+                    color: Colors.deepPurpleAccent,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                  ),
                 ),
               ),
             ],
           ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: const Text(
-                'Cancel',
-                style: TextStyle(
-                  color: Colors.deepPurple,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-            TextButton(
-              onPressed: () {
-                // Update note logic goes here
-                Navigator.pop(context);
-              },
-              child: const Text(
-                'Update',
-                style: TextStyle(
-                  color: Colors.deepPurple,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void _showAddDialog(BuildContext context, NotesServices notesServices) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text(
-            'New Note',
-            style: TextStyle(fontWeight: FontWeight.bold),
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: titleController,
-                decoration: const InputDecoration(
-                  hintText: 'Enter title',
-                ),
-              ),
-              SizedBox(height: 16),
-              TextField(
-                controller: descriptionController,
-                decoration: const InputDecoration(
-                  hintText: 'Enter description',
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: const Text(
-                'Cancel',
-                style: TextStyle(
-                  color: Colors.deepPurple,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-            TextButton(
-              onPressed: () {
-                notesServices.addNote(
-                  titleController.text,
-                  descriptionController.text,
-                );
-                Navigator.pop(context);
-              },
-              child: const Text(
-                'Add',
-                style: TextStyle(
-                  color: Colors.deepPurple,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void _showDeleteDialog(
-      BuildContext context, NotesServices notesServices, int index) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text(
-            'Delete Note',
-            style: TextStyle(fontWeight: FontWeight.bold),
-          ),
-          content: const Text(
-            'Are you sure you want to delete this note?',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: const Text(
-                'Cancel',
-                style: TextStyle(
-                  color: Colors.deepPurple,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-            TextButton(
-              onPressed: () {
-                notesServices.deleteNote(
-                  notesServices.notes[index].id,
-                );
-                Navigator.pop(context);
-              },
-              child: const Text(
-                'Delete',
-                style: TextStyle(
-                  color: Colors.red,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ],
         );
       },
     );
